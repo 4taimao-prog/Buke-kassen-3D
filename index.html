@@ -19,8 +19,10 @@ let data={},has=false;
 try{has=localStorage.getItem('yaji-v3-save')!=null;
   const ks=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('yaji-'))ks.push(k);}
   const rank=k=>k==='yaji-v3-save'?0:k==='yaji-dai-save'?1:k==='yaji-v3-mid'?2:3;ks.sort((a,b)=>rank(a)-rank(b));
-  let size=0;const MAX=1400000;// keep the address short enough for every browser; pictures go last and are skipped if too big
-  for(const k of ks){const v=localStorage.getItem(k)||'';if(rank(k)===3&&size+v.length>MAX)continue;data[k]=v;size+=v.length+k.length;}
+  // Chrome on phones refuses very long addresses (it shows about:blank#blocked), so keep the copy small:
+  // the save always goes; the battle in progress and the emaki pictures only while they fit.
+  const enc=new TextEncoder();let size=0;const MAX=360000;// bytes before base64 (~480 KB of address)
+  for(const k of ks){const v=localStorage.getItem(k)||'';const n=enc.encode(v).length+k.length+8;if(rank(k)>=2&&size+n>MAX)continue;data[k]=v;size+=n;}
 }catch(e){has=false;}
 let h='none';
 if(has){const u=new TextEncoder().encode(JSON.stringify(data));let b='';for(let i=0;i<u.length;i+=8192)b+=String.fromCharCode.apply(null,u.subarray(i,i+8192));
